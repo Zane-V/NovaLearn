@@ -511,6 +511,5 @@ def delete_account():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7700))  # Render provides PORT
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)
 
