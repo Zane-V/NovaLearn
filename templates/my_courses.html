@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses | NovaLearn</title>
+</head>
+<body>
+    {% extends "base.html" %}
+    {% block content %}
+    <nav class="navbar" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: dodgerblue;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+">
+<h1 style="margin:0;"><a href="{{url_for('dashboard')}}">NovaLearn</a></h1>
+  <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+    {% if session.get('user') %}
+      {% if session['user']['role'] == 'Instructor' %}
+        <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
+        <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+        <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+      {% endif %}
+      <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
+      <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
+      <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+    {% else %}
+      <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
+      <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+    <h2>My Courses</h2>
+    <div class="cards">
+      {% for c in courses %}
+        <div class="card">
+          <h4><a href="{{ url_for('course_detail', course_id=c[0]) }}">{{ c[1] }}</a></h4>
+          <p>{{ c[2] }}</p>
+          <small>Instructor: {{ c[3] }}</small>
+
+          {% if c[4] %}
+            <img src="{{ url_for('uploaded_file', filename=c[4]) }}" 
+                 alt="Course Image" width="250" style="border-radius: 8px;">
+          {% endif %}
+        </div>
+      {% else %}
+        <p>No courses added yet.</p>
+      {% endfor %}
+    </div>
+    {% endblock %}
+</body>
+</html>

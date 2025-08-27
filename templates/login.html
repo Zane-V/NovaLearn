@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | NovaLearn</title>
+</head>
+<body>
+{% extends "base.html" %}
+{% block content %}
+<h2>Login</h2>
+<form method="POST">
+  <input type="text" name="username" placeholder="Username" required>
+  <input type="password" name="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+</form>
+<p>Don’t have an account? <a href="{{ url_for('signup') }}" style="text-decoration: none; color: dodgerblue;">Signup</a></p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% endblock %}
+</body>
+</html>

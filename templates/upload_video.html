@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video | NovaLearn</title>
+</head>
+<body>
+    {% extends "base.html" %}
+{% block content %}
+<nav class="navbar" style="
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+background: dodgerblue;
+color: white;
+padding: 15px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+z-index: 1000;
+">
+<h1 style="margin:0;"><a href="{{url_for('dashboard')}}">NovaLearn</a></h1>
+<ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+{% if session.get('user') %}
+  {% if session['user']['role'] == 'Instructor' %}
+    <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
+    <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+    <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+  {% endif %}
+  <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
+  <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+{% else %}
+  <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
+  <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+{% endif %}
+</ul>
+</nav>
+
+<div class="form-container">
+  <h2>Upload Course Video</h2>
+  <form method="post" enctype="multipart/form-data">
+    <label>Choose Course</label>
+    <select name="course_id" required>
+      {% for course in courses %}
+        <option value="{{ course[0] }}">{{ course[1] }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Video Title</label>
+    <input type="text" name="title" required>
+
+    <label>Upload Video</label>
+    <input type="file" name="video" accept="video/*" required>
+
+    <button type="submit">Upload</button>
+  </form>
+</div>
+{% endblock %}
+
+</body>
+</html>

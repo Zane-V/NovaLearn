@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Detail | NovaLearn</title>
+</head>
+<body>
+    {% extends "base.html" %}
+{% block content %}
+<nav class="navbar" style="
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+background: dodgerblue;
+color: white;
+padding: 15px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+z-index: 1000;
+">
+<h1 style="margin:0;"><a href="{{url_for('dashboard')}}">NovaLearn</a></h1>
+<ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+{% if session.get('user') %}
+  {% if session['user']['role'] == 'Instructor' %}
+    <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
+    <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+    <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+  {% endif %}
+  <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
+  <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
+  <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+{% else %}
+  <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
+  <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+{% endif %}
+</ul>
+</nav>
+
+<article class="course-detail">
+  <header>
+    <h2>{{ course[1] }}</h2>
+    <p>{{ course[2] }}</p>
+    <small>Instructor: {{ course[3] }}</small>
+  </header>
+
+  {% if user.role == "Student" %}
+    <a class="btn" href="{{ url_for('add_course', course_id=course[0]) }}">Add to My Courses</a>
+  {% endif %}
+
+  <section>
+    <h3>Course Videos</h3>
+    {% if videos %}
+      <ul class="media-list">
+        {% for v in videos %}
+          <li class="media-item">
+            <b>{{ v[2] }}</b><br>
+            <video width="480" controls>
+              <source src="{{ url_for('uploaded_file', filename=v[3]) }}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No videos yet.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h3>Assignments</h3>
+    {% if assignments %}
+      <ul class="media-list">
+        {% for a in assignments %}
+          <li class="media-item">
+            <b>{{ a[2] }}</b> —
+            <a class="btn" href="{{ url_for('uploaded_file', filename=a[3]) }}" target="_blank">Download</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No assignments yet.</p>
+    {% endif %}
+  </section>
+</article>
+{% endblock %}
+
+
+</body>
+</html>

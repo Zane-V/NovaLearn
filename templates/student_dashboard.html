@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | NovaLearn</title>
+</head>
+<body>
+  {% extends "base.html" %}
+  {% block content %}
+  <nav class="navbar" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: dodgerblue;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+  ">
+    <h1 style="margin:0;">NovaLearn</h1>
+    <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+      {% if session.get('user') %}
+        {% if session['user']['role'] == 'Instructor' %}
+          <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
+          <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+          <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
+        <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
+        <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
+        <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <div style="padding-top:80px;">
+    <h2 style="text-align:center; margin-bottom:20px;">Welcome, {{ user.username }} </h2>
+
+  </div>
+
+<h3>Enrolled Courses ({{ enrolled_count }})</h3>
+<div class="cards" style="
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 20px; 
+    margin-bottom: 30px;
+">
+  {% for c in enrolled_courses %}
+    <div class="card" style="
+        flex: 1 1 300px; 
+        min-width: 250px; 
+        background: #fff; 
+        padding: 15px; 
+        border-radius: 10px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    ">
+      <h4><a href="{{ url_for('course_detail', course_id=c[0]) }}" style="text-decoration:none; color:dodgerblue;">{{ c[1] }}</a></h4>
+      <p>{{ c[2] }}</p>
+      <small>Instructor: {{ c[3] }}</small>
+    </div>
+  {% else %}
+    <p>You haven’t enrolled in any courses yet.</p>
+  {% endfor %}
+</div>
+
+<h3>Recommended Courses</h3>
+<div class="cards" style="
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 20px;
+">
+  {% for c in recommended %}
+    <div class="card" style="
+        flex: 1 1 300px; 
+        min-width: 250px; 
+        background: #fff; 
+        padding: 15px; 
+        border-radius: 10px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    ">
+      <h4><a href="{{ url_for('course_detail', course_id=c[0]) }}" style="text-decoration:none; color:dodgerblue;">{{ c[1] }}</a></h4>
+      <p>{{ c[2] }}</p>
+      <small>Instructor: {{ c[3] }}</small><br>
+      <a class="btn" href="{{ url_for('add_course', course_id=c[0]) }}" style="
+          display: inline-block; 
+          margin-top: 10px; 
+          padding: 8px 12px; 
+          background: dodgerblue; 
+          color: white; 
+          border-radius: 6px; 
+          text-decoration: none;
+      ">Add</a>
+    </div>
+  {% else %}
+    <p>No courses to recommend right now.</p>
+  {% endfor %}
+</div>
+{% endblock %}
+</body>
+</html>
