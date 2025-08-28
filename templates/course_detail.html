@@ -21,7 +21,7 @@ justify-content: space-between;
 align-items: center;
 z-index: 1000;
 ">
-<h1 style="margin:0;"><a href="{{url_for('dashboard')}}">NovaLearn</a></h1>
+<h1 style="margin:0;"><a href="{{url_for('dashboard')}}" style="color:white; text-decoration:none;">NovaLearn</a></h1>
 <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
 {% if session.get('user') %}
   {% if session['user']['role'] == 'Instructor' %}
@@ -39,14 +39,25 @@ z-index: 1000;
 </ul>
 </nav>
 
-<article class="course-detail">
+<article class="course-detail" style="margin-top:80px; padding:20px;">
   <header>
     <h2>{{ course[1] }}</h2>
-    <p>{{ course[2] }}</p>
-    <small>Instructor: {{ course[3] }}</small>
+    <p><strong>Short Description:</strong> {{ course[2] }}</p>
+  
+    {% if course[4] %}
+      <img src="{{ url_for('uploaded_file', filename=course[4]) }}" 
+           alt="Course Image" width="300" style="border-radius:8px; margin:15px 0;">
+    {% endif %}
+  
+    <section style="margin-top:20px;">
+      <h3>Full Content</h3>
+      <p>{{ course[5] }}</p>
+    </section>
+  
+    <small><em>Instructor: {{ course[3] }}</em></small>
   </header>
-
-  {% if user.role == "Student" %}
+  
+  {% if session['user']['role'] == "Student" %}
     <a class="btn" href="{{ url_for('add_course', course_id=course[0]) }}">Add to My Courses</a>
   {% endif %}
 
@@ -86,7 +97,5 @@ z-index: 1000;
   </section>
 </article>
 {% endblock %}
-
-
 </body>
 </html>

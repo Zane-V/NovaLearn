@@ -4,7 +4,7 @@ import sqlite3
 import re
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, send_from_directory
+    session, flash, send_from_directory, jsonify
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -45,6 +45,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT,
+        content TEXT,
         instructor TEXT,
         image TEXT
     )
@@ -60,6 +61,11 @@ def init_db():
         FOREIGN KEY(course_id) REFERENCES courses(id)
     )
     """)
+
+    c.execute("PRAGMA table_info(courses)")
+    columns = [col[1] for col in c.fetchall()]
+    if "content" not in columns:
+        c.execute("ALTER TABLE courses ADD COLUMN content TEXT")
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS videos (
@@ -253,6 +259,7 @@ def create_course():
     if request.method == "POST":
         title = request.form["title"].strip()
         description = request.form.get("description", "").strip()
+        content = request.form.get("content", "").strip()
         instructor = session["user"]["username"]
 
         file = request.files.get("image")
@@ -268,9 +275,10 @@ def create_course():
 
         conn = get_db()
         c = conn.cursor()
+       
         c.execute(
-            "INSERT INTO courses (title, description, instructor, image) VALUES (?, ?, ?, ?)",
-            (title, description, instructor, image_filename)
+            "INSERT INTO courses (title, description, instructor, image, content) VALUES (?, ?, ?, ?, ?)",
+            (title, description, instructor, image_filename, content)
         )
         conn.commit()
         conn.close()
@@ -280,36 +288,36 @@ def create_course():
     return render_template("create_course.html")
 
 
+
 # ----- Course Detail (videos + assignments) -----
 @app.route("/course/<int:course_id>")
 def course_detail(course_id):
-    if "user" not in session:
-        return redirect(url_for("login"))
-
     conn = get_db()
     c = conn.cursor()
-
-    c.execute("SELECT * FROM courses WHERE id=?", (course_id,))
+    
+    # Get course
+    c.execute("SELECT * FROM courses WHERE id = ?", (course_id,))
     course = c.fetchone()
     if not course:
         conn.close()
         flash("Course not found.", "error")
         return redirect(url_for("dashboard"))
-
-    c.execute("SELECT * FROM videos WHERE course_id=? ORDER BY id DESC", (course_id,))
+    
+    # Get videos
+    c.execute("SELECT * FROM videos WHERE course_id = ?", (course_id,))
     videos = c.fetchall()
-
-    c.execute("SELECT * FROM assignments WHERE course_id=? ORDER BY id DESC", (course_id,))
+    
+    # Get assignments
+    c.execute("SELECT * FROM assignments WHERE course_id = ?", (course_id,))
     assignments = c.fetchall()
-
+    
     conn.close()
-    return render_template(
-        "course_detail.html",
-        user=session["user"],
-        course=course,
-        videos=videos,
-        assignments=assignments
-    )
+    
+    return render_template("course_detail.html",
+                           course=course,
+                           videos=videos,
+                           assignments=assignments)
+
 
 # ----- Add Course (Student) -----
 @app.route("/add_course/<int:course_id>")
@@ -349,19 +357,28 @@ def add_course(course_id):
 def my_courses():
     if "user" not in session:
         return redirect(url_for("login"))
-    user_id = session["user"]["id"]
 
+    user = session["user"]
     conn = get_db()
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("""
-        SELECT courses.* FROM courses
-        JOIN user_courses ON courses.id = user_courses.course_id
-        WHERE user_courses.user_id=?
-        ORDER BY courses.id DESC
-    """, (user_id,))
-    courses = c.fetchall()
+
+    if user["role"] == "Instructor":
+        # Show courses the instructor created
+        c.execute("SELECT * FROM courses WHERE instructor = ?", (user["username"],))
+        courses = c.fetchall()
+    else:
+        # Show courses the student enrolled in
+        c.execute("""
+            SELECT c.* FROM courses c
+            JOIN user_courses uc ON c.id = uc.course_id
+            WHERE uc.user_id = ?
+        """, (user["id"],))
+        courses = c.fetchall()
+
     conn.close()
-    return render_template("my_courses.html", user=session["user"], courses=courses)
+    return render_template("my_courses.html", courses=courses)
+
 
 # ----- Upload Video (Instructor) -----
 @app.route("/upload_video", methods=["GET", "POST"])
@@ -393,10 +410,12 @@ def upload_video():
             conn.commit()
             flash("Video uploaded successfully!", "success")
             conn.close()
-            return redirect(url_for("dashboard"))
+            # Redirect to course detail instead of dashboard
+            return redirect(url_for("course_detail", course_id=course_id))
 
     conn.close()
     return render_template("upload_video.html", courses=courses)
+
 
 # ----- Upload Assignment (Instructor) -----
 @app.route("/upload_assignment", methods=["GET", "POST"])
@@ -428,10 +447,12 @@ def upload_assignment():
             conn.commit()
             flash("Assignment uploaded successfully!", "success")
             conn.close()
-            return redirect(url_for("dashboard"))
+            # Redirect to course detail instead of dashboard
+            return redirect(url_for("course_detail", course_id=course_id))
 
-    conn.close()# ✅ match login session
+    conn.close()
     return render_template("upload_assignment.html", courses=courses)
+
 
 # ----- Serve Uploads -----
 @app.route("/uploads/<path:filename>")
@@ -508,6 +529,10 @@ def delete_account():
     session.clear()
     flash("Your account has been deleted successfully.", "success")
     return redirect(url_for("login"))
+
+
+
+
 
 
 if __name__ == "__main__":
