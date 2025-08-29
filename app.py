@@ -4,7 +4,7 @@ import sqlite3
 import re
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, send_from_directory, jsonify
+    session, flash, send_from_directory
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
