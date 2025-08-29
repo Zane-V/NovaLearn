@@ -56,10 +56,6 @@ z-index: 1000;
   
     <small><em>Instructor: {{ course[3] }}</em></small>
   </header>
-  
-  {% if session['user']['role'] == "Student" %}
-    <a class="btn" href="{{ url_for('add_course', course_id=course[0]) }}">Add to My Courses</a>
-  {% endif %}
 
   <section>
     <h3>Course Videos</h3>
