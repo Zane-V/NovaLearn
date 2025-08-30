@@ -151,6 +151,7 @@ def signup():
                 (username, hashed_password, role)
             )
             conn.commit()
+            
             flash("Account created successfully! Please log in.", "success")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
