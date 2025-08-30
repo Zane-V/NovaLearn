@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Courses | NovaLearn</title>
-</head>
-<body>
-  {% extends "base.html" %}
-  {% block content %}
-  
-  <nav class="navbar" style="
+{% extends "base.html" %}
+{% block content %}
+
+<nav class="navbar" style="
     position: fixed;
     top: 0;
     left: 0;
@@ -21,8 +13,10 @@
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
-  ">
-    <h1 style="margin:0;"><a href="{{ url_for('dashboard') }}" style="color:white; text-decoration:none;">NovaLearn</a></h1>
+">
+    <h1 style="margin:0;">
+        <a href="{{ url_for('dashboard') }}" style="color:white; text-decoration:none;">NovaLearn</a>
+    </h1>
     <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
       {% if session.get('user') %}
         {% if session['user']['role'] == 'Instructor' %}
@@ -38,10 +32,11 @@
         <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
       {% endif %}
     </ul>
-  </nav>
+</nav>
 
-  <h2 style="margin-top:100px;">My Courses</h2>
-  <div class="cards">
+<h2 style="margin-top:100px;">My Courses</h2>
+
+<div class="cards">
     {% for course in courses %}
       <div class="card" style="margin-bottom:20px;">
         <h4><a href="{{ url_for('course_detail', course_id=course['id']) }}">{{ course['title'] }}</a></h4>
@@ -56,8 +51,31 @@
     {% else %}
       <p>No courses added yet.</p>
     {% endfor %}
-  </div>
+</div>
 
-  {% endblock %}
-</body>
-</html>
+<!-- Global Progress Tracker (only for students) -->
+{% if role.lower() == "student" %}
+<div style="margin-bottom: 20px;">
+    <div style="width: 100%; background: #eee; border-radius: 10px; height: 25px; overflow: hidden;">
+        <div style="width: {{progress}}%; background: dodgerblue; height: 25px; text-align: center; color: white; font-weight: bold; padding-top: 3px;">
+            {{ progress }}%
+        </div>
+    </div>
+    <small>{{ enrolled }}/{{ total }} courses enrolled</small>
+</div>
+{% endif %}
+
+
+<!--  Style for the progress bar -->
+<style>
+  .progress-fill {
+    background: dodgerblue;
+    height: 25px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    transition: width 1s ease-in-out;
+  }
+</style>
+
+{% endblock %}

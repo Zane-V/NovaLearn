@@ -368,12 +368,17 @@ def my_courses():
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    if user["role"] == "Instructor":
+    courses = []
+    progress = 0
+    enrolled = 0
+    total = 0
+
+    if user["role"].lower() == "instructor":
         # Show courses the instructor created
         c.execute("SELECT * FROM courses WHERE instructor = ?", (user["username"],))
         courses = c.fetchall()
     else:
-        # Show courses the student enrolled in
+        # Student role
         c.execute("""
             SELECT c.* FROM courses c
             JOIN user_courses uc ON c.id = uc.course_id
@@ -381,8 +386,27 @@ def my_courses():
         """, (user["id"],))
         courses = c.fetchall()
 
+        # Global progress tracker
+        c.execute("SELECT COUNT(*) FROM courses")
+        total = c.fetchone()[0]
+
+        c.execute("SELECT COUNT(*) FROM user_courses WHERE user_id = ?", (user["id"],))
+        enrolled = c.fetchone()[0]
+
+        progress = int((enrolled / total) * 100) if total > 0 else 0
+
     conn.close()
-    return render_template("my_courses.html", courses=courses)
+
+    return render_template(
+        "my_courses.html",
+        courses=courses,
+        role=user["role"],
+        progress=progress,
+        enrolled=enrolled,
+        total=total
+    )
+
+
 
 
 # ----- Upload Video (Instructor) -----
