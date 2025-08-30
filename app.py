@@ -2,9 +2,10 @@ import os
 import time
 import sqlite3
 import re
+import uuid
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    session, flash, send_from_directory
+    session, flash, send_from_directory, jsonify
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -106,7 +107,7 @@ def allowed_file(filename, allowed):
 
 def unique_filename(filename):
     name, ext = os.path.splitext(secure_filename(filename))
-    return f"{int(time.time())}_{name}{ext}"
+    return f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{name}{ext}"
 
 # ----------------------------
 # Routes
@@ -136,6 +137,9 @@ def signup():
             return render_template("signup.html", error="Password must contain a lowercase letter.")
         if not re.search(r"[0-9]", password_raw):
             return render_template("signup.html", error="Password must contain a number.")
+        if not re.match(r"^[A-Za-z0-9_]+$", username):
+            return render_template("signup.html", error="Username can only contain letters, numbers, and underscores.")
+
 
         hashed_password = generate_password_hash(password_raw)
 
@@ -529,6 +533,26 @@ def delete_account():
     session.clear()
     flash("Your account has been deleted successfully.", "success")
     return redirect(url_for("login"))
+
+
+@app.route("/search")
+def search():
+    term = request.args.get("q", "").strip()
+    results = []
+
+    if term:
+        conn = get_db()
+        c = conn.cursor()
+        like_term = f"%{term}%"
+
+        # Search courses (case-insensitive)
+        c.execute("SELECT id, title FROM courses WHERE title LIKE ? COLLATE NOCASE", (like_term,))
+        for course in c.fetchall():
+            results.append({"id": course[0], "name": course[1], "type": "course"})
+        conn.close()
+
+    return jsonify(results)
+
 
 
 

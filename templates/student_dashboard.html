@@ -29,6 +29,7 @@
           <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
           <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
         {% endif %}
+      </div>
         <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
         <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
         <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
@@ -40,6 +41,9 @@
   </nav>
 
   <div style="padding-top:80px;">
+    <div style="position: relative;">
+      <input type="text" id="searchBox" placeholder="Search courses or instructors..." autocomplete="off">
+      <ul id="searchResults"></ul>
     <h2 style="text-align:center; margin-bottom:20px;">Welcome, {{ user.username }} </h2>
 
   </div>
