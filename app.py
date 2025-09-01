@@ -424,27 +424,26 @@ def my_courses():
         return redirect(url_for("login"))
 
     user = session["user"]
+
+    # Block instructors from accessing this route
+    if user["role"].lower() == "instructor":
+        return redirect(url_for("dashboard"))
+
     conn = get_db()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    if user["role"].lower() == "instructor":
-        # Show courses the instructor created
-        c.execute("SELECT * FROM courses WHERE instructor = ?", (user["username"],))
-        courses = c.fetchall()
-    else:
-        # Student role
-        c.execute("""
-            SELECT c.* FROM courses c
-            JOIN user_courses uc ON c.id = uc.course_id
-            WHERE uc.user_id = ?
-        """, (user["id"],))
-        courses = c.fetchall()
-
+    # Student: get their enrolled courses
+    c.execute("""
+        SELECT c.* FROM courses c
+        JOIN user_courses uc ON c.id = uc.course_id
+        WHERE uc.user_id = ?
+    """, (user["id"],))
+    courses = c.fetchall()
     conn.close()
 
     # Calculate overall progress for the student
-    progress = int(get_user_progress(user["id"])) if user["role"].lower() != "instructor" else 0
+    progress = int(get_user_progress(user["id"]))
 
     return render_template(
         "my_courses.html",
@@ -452,6 +451,7 @@ def my_courses():
         role=user["role"],
         progress=progress  
     )
+
 
 
 # ----- Upload Video (Instructor) -----

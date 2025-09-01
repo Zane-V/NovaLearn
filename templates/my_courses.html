@@ -121,52 +121,57 @@
 </style>
 
 <nav class="navbar">
-    <h1>
-        <a href="{{ url_for('dashboard') }}">NovaLearn</a>
-    </h1>
-    <ul>
-      {% if session.get('user') %}
-        {% if session['user']['role'] == 'Instructor' %}
-          <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
-          <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
-          <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
-        {% endif %}
-        <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
-        <li><a href="{{ url_for('profile') }}">Profile</a></li>
-        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+  <h1>
+      <a href="{{ url_for('dashboard') }}">NovaLearn</a>
+  </h1>
+  <ul>
+    {% if session.get('user') %}
+      {% if session['user']['role'] == 'Instructor' %}
+        <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
+        <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
+        <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
       {% else %}
-        <li><a href="{{ url_for('login') }}">Login</a></li>
-        <li><a href="{{ url_for('signup') }}">Signup</a></li>
+        <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
       {% endif %}
-    </ul>
+      <li><a href="{{ url_for('profile') }}">Profile</a></li>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    {% else %}
+      <li><a href="{{ url_for('login') }}">Login</a></li>
+      <li><a href="{{ url_for('signup') }}">Signup</a></li>
+    {% endif %}
+  </ul>
 </nav>
+
 
 <h2>My Courses</h2>
 
-<div class="cards">
-    {% for course in courses %}
-      <a href="{{ url_for('course_detail', course_id=course['id']) }}" class="card-link">
-        <div class="card">
-          <h4>{{ course['title'] }}</h4>
-          <p>{{ course['description'] }}</p>
-          <small>Instructor: {{ course['instructor'] }}</small>
-          {% if course['image'] %}
-            <img src="{{ url_for('uploaded_file', filename=course['image']) }}" 
-                 alt="Course Image">
-          {% endif %}
-        </div>
-      </a>
-    {% else %}
-      <p>No courses added yet.</p>
-    {% endfor %}
-</div>
-
-<div class="progress-wrapper">
-  <p class="progress-text">Overall Progress: <span id="progress-text">0</span>%</p>
-  <div class="progress-bar" title="{{ progress|default(0) }}%">
-    <div class="progress-fill" id="progress-fill"></div>
+{% if session.get('user') and session['user']['role'] != 'Instructor' %}
+  <div class="cards">
+      {% for course in courses %}
+        <a href="{{ url_for('course_detail', course_id=course['id']) }}" class="card-link">
+          <div class="card">
+            <h4>{{ course['title'] }}</h4>
+            <p>{{ course['description'] }}</p>
+            <small>Instructor: {{ course['instructor'] }}</small>
+            {% if course['image'] %}
+              <img src="{{ url_for('uploaded_file', filename=course['image']) }}" 
+                   alt="Course Image">
+            {% endif %}
+          </div>
+        </a>
+      {% else %}
+        <p>No courses added yet.</p>
+      {% endfor %}
   </div>
-</div>
+
+  <div class="progress-wrapper">
+    <p class="progress-text">Overall Progress: <span id="progress-text">0</span>%</p>
+    <div class="progress-bar" title="{{ progress|default(0) }}%">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+{% endif %}
+
 
 <script>
   window.addEventListener("DOMContentLoaded", function() {

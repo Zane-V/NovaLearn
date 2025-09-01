@@ -13,29 +13,31 @@ justify-content: space-between;
 align-items: center;
 z-index: 1000;
 ">
-<h1 style="margin:0;"><a href="{{url_for('dashboard')}}">NovaLearn</a></h1>
-<ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
-{% if session.get('user') %}
-  {% if session['user']['role'] == 'Instructor' %}
-    <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
-    <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
-    <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
-  {% endif %}
-  <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
-  <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
-  <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
-{% else %}
-  <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
-  <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
-{% endif %}
-</ul>
+  <h1 style="margin:0;"><a href="{{ url_for('dashboard') }}" style="color:white; text-decoration:none;">NovaLearn</a></h1>
+  <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+    {% if session.get('user') %}
+      {% if session['user']['role'] == 'Instructor' %}
+        <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
+        <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+        <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+      {% elif session['user']['role'] == 'Student' %}
+        <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
+      {% endif %}
+      <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
+      <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+    {% else %}
+      <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
+      <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+    {% endif %}
+  </ul>
 </nav>
 
-<h2>My Profile</h2>
+<h2 style="margin-top:80px;">My Profile</h2>
 <div class="profile" style="display: flex; gap: 15px; flex-direction: column; padding: 20px;">
   <div><b>Username:</b> {{ user.username }}</div>
   <div><b>Role:</b> {{ user.role }}</div>
 </div>
+
 <form action="{{ url_for('delete_account') }}" method="POST">
   <button type="submit" style="color: white; background: dodgerblue; padding: 5px; border: none; border-radius: 8px; width: auto;">
     Delete Account

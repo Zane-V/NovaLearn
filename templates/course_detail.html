@@ -20,8 +20,9 @@ z-index: 1000;
     <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
     <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
     <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+  {% else %}
+    <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
   {% endif %}
-  <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
   <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
   <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
 {% else %}
@@ -85,17 +86,19 @@ z-index: 1000;
   </section>
 </article>
 
-{% if not is_completed %}
-  <form action="{{ url_for('mark_course_done', course_id=course['id']) }}" method="post">
-    <button type="submit" style="padding:10px 20px; background:dodgerblue; color:white; border:none; border-radius:5px; cursor:pointer;">
-      Mark as Done
-    </button>
-  </form>
-{% else %}
-  <p style="color: green; font-weight: bold; margin-top: 10px;">
-     Course Completed!!  </p>
+<!--Showing the mark as done button for students only-->
+{% if session.get('user') and session['user']['role'].lower() != 'instructor' %}
+  {% if not is_completed %}
+    <form action="{{ url_for('mark_course_done', course_id=course['id']) }}" method="post">
+      <button type="submit" style="padding:10px 20px; background:dodgerblue; color:white; border:none; border-radius:5px; cursor:pointer;">
+        Mark as Done
+      </button>
+    </form>
+  {% else %}
+    <p style="color: green; font-weight: bold; margin-top: 10px;">
+       Course Completed!!
+    </p>
+  {% endif %}
 {% endif %}
 
-
 {% endblock %}
-
