@@ -84,5 +84,18 @@ z-index: 1000;
     {% endif %}
   </section>
 </article>
+
+{% if not is_completed %}
+  <form action="{{ url_for('mark_course_done', course_id=course['id']) }}" method="post">
+    <button type="submit" style="padding:10px 20px; background:dodgerblue; color:white; border:none; border-radius:5px; cursor:pointer;">
+      Mark as Done
+    </button>
+  </form>
+{% else %}
+  <p style="color: green; font-weight: bold; margin-top: 10px;">
+     Course Completed!!  </p>
+{% endif %}
+
+
 {% endblock %}
 

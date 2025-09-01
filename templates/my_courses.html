@@ -1,81 +1,208 @@
 {% extends "base.html" %}
 {% block content %}
 
-<nav class="navbar" style="
+<style>
+  /* Navbar */
+  .navbar {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     background: dodgerblue;
     color: white;
-    padding: 15px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
-">
-    <h1 style="margin:0;">
-        <a href="{{ url_for('dashboard') }}" style="color:white; text-decoration:none;">NovaLearn</a>
+  }
+
+  .navbar h1 {
+    margin: 0;
+  }
+
+  .navbar a {
+    color: white;
+    text-decoration: none;
+  }
+
+  .navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+  }
+
+  body {
+    padding-top: 80px;
+    font-family: Arial, sans-serif;
+  }
+
+  /* Course cards */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .card-link {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .card h4 {
+    margin-top: 0;
+    color: #333;
+    transition: color 0.2s ease;
+  }
+
+  .card:hover h4 {
+    color: dodgerblue;
+  }
+
+  .card img {
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover img {
+    transform: scale(1.05);
+  }
+
+  /* Progress bar */
+  .progress-wrapper {
+    margin-top: 30px;
+  }
+
+  .progress-text {
+    margin-bottom: 8px;
+    font-weight: bold;
+    transition: color 0.5s ease;
+  }
+
+  .progress-bar {
+    background: #e5e7eb;
+    border-radius: 9999px;
+    height: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  width: 0%;
+  transition: width 1s ease;
+  background: linear-gradient(to right, #66B2FF, #1E90FF, #104E8B);
+}
+
+</style>
+
+<nav class="navbar">
+    <h1>
+        <a href="{{ url_for('dashboard') }}">NovaLearn</a>
     </h1>
-    <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
+    <ul>
       {% if session.get('user') %}
         {% if session['user']['role'] == 'Instructor' %}
-          <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
-          <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
-          <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+          <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
+          <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
+          <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
         {% endif %}
-        <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
-        <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
-        <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
+        <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
+        <li><a href="{{ url_for('profile') }}">Profile</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
       {% else %}
-        <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
-        <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('signup') }}">Signup</a></li>
       {% endif %}
     </ul>
 </nav>
 
-<h2 style="margin-top:100px;">My Courses</h2>
+<h2>My Courses</h2>
 
 <div class="cards">
     {% for course in courses %}
-      <div class="card" style="margin-bottom:20px;">
-        <h4><a href="{{ url_for('course_detail', course_id=course['id']) }}">{{ course['title'] }}</a></h4>
-        <p>{{ course['description'] }}</p>
-        <small>Instructor: {{ course['instructor'] }}</small><br>
-
-        {% if course['image'] %}
-          <img src="{{ url_for('uploaded_file', filename=course['image']) }}" 
-               alt="Course Image" width="250" style="border-radius:8px; margin-top:10px;">
-        {% endif %}
-      </div>
+      <a href="{{ url_for('course_detail', course_id=course['id']) }}" class="card-link">
+        <div class="card">
+          <h4>{{ course['title'] }}</h4>
+          <p>{{ course['description'] }}</p>
+          <small>Instructor: {{ course['instructor'] }}</small>
+          {% if course['image'] %}
+            <img src="{{ url_for('uploaded_file', filename=course['image']) }}" 
+                 alt="Course Image">
+          {% endif %}
+        </div>
+      </a>
     {% else %}
       <p>No courses added yet.</p>
     {% endfor %}
 </div>
 
-<!-- Global Progress Tracker (only for students) -->
-{% if role.lower() == "student" %}
-<div style="margin-bottom: 20px;">
-    <div style="width: 100%; background: #eee; border-radius: 10px; height: 25px; overflow: hidden;">
-        <div style="width: {{progress}}%; background: dodgerblue; height: 25px; text-align: center; color: white; font-weight: bold; padding-top: 3px;">
-            {{ progress }}%
-        </div>
-    </div>
-    <small>{{ enrolled }}/{{ total }} courses enrolled</small>
+<div class="progress-wrapper">
+  <p class="progress-text">Overall Progress: <span id="progress-text">0</span>%</p>
+  <div class="progress-bar" title="{{ progress|default(0) }}%">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
 </div>
-{% endif %}
+
+<script>
+  window.addEventListener("DOMContentLoaded", function() {
+    const targetProgress = {{ progress|default(0)|tojson }};
+    const fill = document.getElementById("progress-fill");
+    const text = document.getElementById("progress-text");
+    const textWrapper = document.querySelector(".progress-text");
+
+    // Animate bar fill + gradient
+    setTimeout(() => {
+      fill.style.width = targetProgress + "%";
+
+      // smooth blue gradient
+      fill.style.background = "linear-gradient(to right, #66B2FF, #1E90FF, #104E8B)";
+
+      // text color matching the mid-blue
+      textWrapper.style.color = "#1E90FF";
+    }, 200);
+
+    // Animate number count-up
+    let current = 0;
+    const duration = 1000;
+    const stepTime = targetProgress > 0 ? Math.max(Math.floor(duration / targetProgress), 20) : duration;
+
+    const counter = setInterval(() => {
+      if (current < targetProgress) {
+        current++;
+        text.textContent = current;
+      } else {
+        text.textContent = targetProgress; 
+        clearInterval(counter);
+      }
+    }, stepTime);
+  });
+</script>
 
 
-<!--  Style for the progress bar -->
-<style>
-  .progress-fill {
-    background: dodgerblue;
-    height: 25px;
-    text-align: center;
-    color: white;
-    font-weight: bold;
-    transition: width 1s ease-in-out;
-  }
-</style>
 
 {% endblock %}

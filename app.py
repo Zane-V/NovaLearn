@@ -35,7 +35,7 @@ def init_db():
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Username TEXT UNIQUE,
+        username TEXT UNIQUE,
         password TEXT,
         role TEXT
     )
@@ -90,6 +90,17 @@ def init_db():
     )
     """)
 
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS course_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    completed INTEGER DEFAULT 0,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, course_id)
+    )   
+    """)
+
     conn.commit()
     conn.close()
 
@@ -99,7 +110,9 @@ init_db()
 # Helpers
 # ----------------------------
 def get_db():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 def allowed_file(filename, allowed):
     ext = os.path.splitext(filename)[1].lower()
@@ -147,7 +160,7 @@ def signup():
         c = conn.cursor()
         try:
             c.execute(
-                "INSERT INTO users (Username, password, role) VALUES (?, ?, ?)",
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
                 (username, hashed_password, role)
             )
             conn.commit()
@@ -170,7 +183,7 @@ def login():
 
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE Username=?", (username,))
+        c.execute("SELECT * FROM users WHERE username=?", (username,))
         user = c.fetchone()
         conn.close()
 
@@ -237,14 +250,17 @@ def dashboard():
     """, (user["id"],))
     recommended = c.fetchall()
 
+    progress = int(get_user_progress(user["id"]))
+
     conn.close()
     return render_template(
-        "student_dashboard.html",
-        user=user,
-        enrolled_courses=enrolled_courses,
-        recommended=recommended,
-        enrolled_count=len(enrolled_courses)
-    )
+    "student_dashboard.html",
+    user=user,
+    enrolled_courses=enrolled_courses,
+    recommended=recommended,
+    enrolled_count=len(enrolled_courses),
+    progress=progress
+    )   
 
 # ----- Profile -----
 @app.route("/profile")
@@ -297,7 +313,12 @@ def create_course():
 # ----- Course Detail (videos + assignments) -----
 @app.route("/course/<int:course_id>")
 def course_detail(course_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session["user"]["id"]
     conn = get_db()
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     
     # Get course
@@ -316,12 +337,51 @@ def course_detail(course_id):
     c.execute("SELECT * FROM assignments WHERE course_id = ?", (course_id,))
     assignments = c.fetchall()
     
+    # Check if course is completed
+    c.execute("""
+        SELECT completed FROM course_progress
+        WHERE user_id = ? AND course_id = ?
+    """, (user_id, course_id))
+    progress_row = c.fetchone()
+    is_completed = bool(progress_row and progress_row["completed"] == 1)
+
     conn.close()
     
-    return render_template("course_detail.html",
-                           course=course,
-                           videos=videos,
-                           assignments=assignments)
+    return render_template(
+        "course_detail.html",
+        course=course,
+        videos=videos,
+        assignments=assignments,
+        is_completed=is_completed
+    )
+
+
+# ----- Mark Course as Done -----
+@app.route("/course/<int:course_id>/done", methods=["POST"])
+def mark_course_done(course_id):
+    if "user" not in session:
+        flash("Please log in to mark progress.", "error")
+        return redirect(url_for("login"))
+
+    user_id = session["user"]["id"]
+
+    conn = get_db()
+    c = conn.cursor()
+
+    # Mark course as completed
+    c.execute("""
+        INSERT INTO course_progress (user_id, course_id, completed)
+        VALUES (?, ?, 1)
+        ON CONFLICT(user_id, course_id) 
+        DO UPDATE SET completed = 1, completed_at = CURRENT_TIMESTAMP
+    """, (user_id, course_id))
+
+    conn.commit()
+    conn.close()
+
+    flash("Course completed!", "success")
+    return redirect(url_for("course_detail", course_id=course_id))
+
 
 
 # ----- Add Course (Student) -----
@@ -368,11 +428,6 @@ def my_courses():
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    courses = []
-    progress = 0
-    enrolled = 0
-    total = 0
-
     if user["role"].lower() == "instructor":
         # Show courses the instructor created
         c.execute("SELECT * FROM courses WHERE instructor = ?", (user["username"],))
@@ -386,27 +441,17 @@ def my_courses():
         """, (user["id"],))
         courses = c.fetchall()
 
-        # Global progress tracker
-        c.execute("SELECT COUNT(*) FROM courses")
-        total = c.fetchone()[0]
-
-        c.execute("SELECT COUNT(*) FROM user_courses WHERE user_id = ?", (user["id"],))
-        enrolled = c.fetchone()[0]
-
-        progress = int((enrolled / total) * 100) if total > 0 else 0
-
     conn.close()
+
+    # Calculate overall progress for the student
+    progress = int(get_user_progress(user["id"])) if user["role"].lower() != "instructor" else 0
 
     return render_template(
         "my_courses.html",
         courses=courses,
         role=user["role"],
-        progress=progress,
-        enrolled=enrolled,
-        total=total
+        progress=progress  
     )
-
-
 
 
 # ----- Upload Video (Instructor) -----
@@ -495,7 +540,7 @@ def delete_user_from_db(user_id):
     cursor = conn.cursor()
 
     # Get user role and username
-    cursor.execute("SELECT Username, role FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT username, role FROM users WHERE id = ?", (user_id,))
     user = cursor.fetchone()
     if not user:
         conn.close()
@@ -536,8 +581,9 @@ def delete_user_from_db(user_id):
         # Finally, delete the instructor's courses
         cursor.execute("DELETE FROM courses WHERE instructor = ?", (username,))
 
-    # For both students & instructors: remove their enrollments
+    # For both students & instructors: remove their enrollments and progress record
     cursor.execute("DELETE FROM user_courses WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM course_progress WHERE user_id = ?", (user_id,))
 
     # Delete the user account
     cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
@@ -578,7 +624,27 @@ def search():
 
     return jsonify(results)
 
+# --- Global Progress ---
+def get_user_progress(user_id):
+    conn = get_db()
+    c = conn.cursor()
 
+    # total enrolled (fix table name if needed)
+    c.execute("SELECT COUNT(*) FROM user_courses WHERE user_id = ?", (user_id,))
+    total = c.fetchone()[0]
+
+    # completed courses
+    c.execute("""
+        SELECT COUNT(*) 
+        FROM course_progress 
+        WHERE user_id = ? AND completed = 1
+    """, (user_id,))
+    completed = c.fetchone()[0]
+
+    conn.close()
+
+    progress = (completed / total * 100) if total > 0 else 0
+    return round(progress, 2)
 
 
 
