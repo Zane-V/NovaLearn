@@ -24,7 +24,7 @@
     }
   </style>
 
-  <main class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; width: max-content;">
+  <main class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; width: 100%;">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="flash-messages">
@@ -40,47 +40,50 @@
   <script>
     const searchBox = document.getElementById('searchBox');
     const resultsList = document.getElementById('searchResults');
-    let timeout = null;
     
-    searchBox.addEventListener('input', () => {
-        clearTimeout(timeout);
-        const query = searchBox.value.trim();
+    if (searchBox && resultsList) {
+        let timeout = null;
     
-        timeout = setTimeout(async () => {
-            if (!query) {
+        searchBox.addEventListener('input', () => {
+            clearTimeout(timeout);
+            const query = searchBox.value.trim();
+    
+            timeout = setTimeout(async () => {
+                if (!query) {
+                    resultsList.style.display = 'none';
+                    resultsList.innerHTML = '';
+                    return;
+                }
+    
+                const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                const results = await res.json();
+    
+                if (results.length === 0) {
+                    resultsList.style.display = 'none';
+                    resultsList.innerHTML = '';
+                    return;
+                }
+    
+                resultsList.innerHTML = results.map(item => {
+                    let link = item.type === 'course' ? `/course/${item.id}` : `/instructor/${item.id}`;
+                    return `<li style="padding:5px; cursor:pointer;" onclick="window.location='${link}'">
+                                ${item.name} (${item.type})
+                            </li>`;
+                }).join('');
+    
+                resultsList.style.display = 'block';
+            }, 250); // debounce 250ms
+        });
+    
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchBox.contains(e.target) && !resultsList.contains(e.target)) {
                 resultsList.style.display = 'none';
-                resultsList.innerHTML = '';
-                return;
             }
-    
-            const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
-            const results = await res.json();
-    
-            if (results.length === 0) {
-                resultsList.style.display = 'none';
-                resultsList.innerHTML = '';
-                return;
-            }
-    
-            resultsList.innerHTML = results.map(item => {
-                let link = item.type === 'course' ? `/course/${item.id}` : `/instructor/${item.id}`;
-                return `<li style="padding:5px; cursor:pointer;" onclick="window.location='${link}'">
-                            ${item.name} (${item.type})
-                        </li>`;
-            }).join('');
-    
-            resultsList.style.display = 'block';
-        }, 250); // debounce 250ms
-    });
-    
-    // Hide dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!searchBox.contains(e.target) && !resultsList.contains(e.target)) {
-            resultsList.style.display = 'none';
-        }
-    });
+        });
+    }
     </script>
+    
 
-</script>
 </body>
 </html>

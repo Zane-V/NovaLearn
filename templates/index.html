@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaLearn</title>
+  <link rel="shortcut icon" href="{{url_for('static', filename='academic.png')}}" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f8ff;
+    }
+
+    /* Navbar */
+    .navbar {
+      background: dodgerblue;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* Desktop menu (right side buttons) */
+    .menu {
+      display: flex;
+      gap: 15px;
+    }
+
+    .menu a {
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .menu a.signup {
+      background: white;
+      color: dodgerblue;
+    }
+
+    .menu a.signup:hover {
+      background: #e6e6e6;
+    }
+
+    .menu a.login {
+      border: 2px solid white;
+      color: white;
+    }
+
+    .menu a.login:hover {
+      background: white;
+      color: dodgerblue;
+    }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    /* Dropdown menu (mobile) */
+    .dropdown {
+      display: none;
+    }
+
+    .dropdown a {
+      text-decoration: none;
+      padding: 12px;
+      text-align: center;
+      font-weight: bold;
+      background: white;
+      color: dodgerblue;
+      margin: 5px 15px;
+      border-radius: 6px;
+      transition: background 0.3s, color 0.3s;
+      width: 90%;
+    }
+
+    .dropdown a:hover {
+      background: #e6e6e6;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      .menu {
+        display: none; /* hide desktop menu */
+      }
+
+      .hamburger {
+        display: block;
+      }
+
+      .dropdown {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        background: dodgerblue;
+        padding: 10px 0;
+        align-items: center;
+      }
+
+      .dropdown.active {
+        display: flex;
+      }
+    }
+
+    /* Page Content */
+    .hero {
+      text-align: center;
+      padding: 50px 20px;
+      background: #eaf3ff;
+    }
+
+    .hero h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #333;
+    }
+
+    /* Courses Section */
+    .courses {
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .courses h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 26px;
+      color: #222;
+    }
+
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .course-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .course-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .course-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .course-card-content {
+      padding: 15px;
+      flex: 1;
+    }
+
+    .course-card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: dodgerblue;
+    }
+
+    .course-card p {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .course-card .instructor {
+      font-size: 13px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    /* View All Button */
+    .view-btn {
+      display: block;
+      margin: 40px auto 0;
+      text-align: center;
+      padding: 10px 20px;
+      border: 1px solid #3182ce;
+      border-radius: 5px;
+      background: #fff;
+      color: #3182ce;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">NovaLearn</div>
+    <div class="menu">
+      <a href="{{ url_for('signup') }}" class="signup">Sign Up</a>
+      <a href="{{ url_for('login') }}" class="login">Login</a>
+    </div>
+    <div class="hamburger" onclick="toggleDropdown()">☰</div>
+  </nav>
+
+  <!-- Dropdown (mobile only) -->
+  <div class="dropdown" id="dropdown">
+    <a href="{{ url_for('signup') }}" class="signup">Signup</a></p>
+    <a href="{{ url_for('login') }}" class="login">Login</a>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Learn Without Limits, Shine Beyond</h1>
+    <p>Explore, enroll, and excel with NovaLearn.<br>
+    Our intuitive platform empowers you to master new subjects and build a brighter future, all in one place.</p>
+  </section>
+
+  <!-- Courses Section -->
+  <section class="courses">
+    <h2>Explore Our Courses</h2>
+    <div class="course-grid">
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='pythonprog.png')}}" alt="Problem Solving With Python">
+        <div class="course-card-content">
+          <h3>Problem Solving With Python</h3>
+          <p>Master Python—the world’s most versatile programming language. From automation to AI.</p>
+          <p class="instructor">Instructor: Dr. Zane</p>
+        </div>
+      </a>
+
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='webprog.png')}}" alt="Introduction to Web Development">
+        <div class="course-card-content">
+          <h3>Introduction To Web Development</h3>
+          <p>Learn to build stunning, interactive websites from scratch and launch your ideas online.</p>
+          <p class="instructor">Instructor: Dr. </p>
+        </div>
+      </a>
+
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='hacking.png')}}" alt="Fundamentals of Ethical Hacking">
+        <div class="course-card-content">
+          <h3>Fundamentals of Ethical Hacking</h3>
+          <p>Unlock the secrets of cybersecurity and defend the digital world.</p>
+          <p class="instructor">Instructor: Dr. </p>
+        </div>
+      </a>
+
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='troubleshooting.png')}}" alt="Computer Troubleshooting">
+        <div class="course-card-content">
+          <h3>Computer Troubleshooting</h3>
+          <p>Fix and prevent computer issues with confidence through hands-on learning.</p>
+          <p class="instructor">Instructor: Dr. </p>
+        </div>
+      </a>
+
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='122.png')}}" alt="Microsoft Office Applications">
+        <div class="course-card-content">
+          <h3>Microsoft Office Applications</h3>
+          <p>Unlock the full power of Microsoft Office to work smarter, faster, and more productively.</p>
+          <p class="instructor">Instructor: Dr. </p>
+        </div>
+      </a>
+
+      <a href="{{ url_for('signup') }}" class="course-card">
+        <img src="{{url_for('static', filename='infosec.png')}}" alt="Information Security">
+        <div class="course-card-content">
+          <h3>Information Security</h3>
+          <p>Step into the world of cyber defense and safeguard sensitive data.</p>
+          <p class="instructor">Instructor: Mr. </p>
+        </div>
+      </a>
+    </div>
+
+    <!-- View All Button -->
+    <a href="{{ url_for('signup') }}" class="view-btn">View All Courses »</a>
+  </section>
+
+  <script>
+    function toggleDropdown() {
+      document.getElementById("dropdown").classList.toggle("active");
+    }
+  </script>
+</body>
+</html>

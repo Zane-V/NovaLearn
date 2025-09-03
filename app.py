@@ -127,7 +127,7 @@ def unique_filename(filename):
 # ----------------------------
 @app.route("/")
 def main():
-    return redirect(url_for("login"))
+    return render_template('index.html')
 
 # ----- Signup -----
 @app.route("/signup", methods=["GET", "POST"])
@@ -144,6 +144,8 @@ def signup():
             return render_template("signup.html", error="Please select an account type!")
         if len(password_raw) < 8:
             return render_template("signup.html", error="Password must be at least 8 characters long.")
+        if len(password_raw) > 16:
+            return render_template("signup.html", error="Password must be less than 16 characters")
         if not re.search(r"[A-Z]", password_raw):
             return render_template("signup.html", error="Password must contain an uppercase letter.")
         if not re.search(r"[a-z]", password_raw):
@@ -166,7 +168,7 @@ def signup():
             conn.commit()
             
             flash("Account created successfully! Please log in.", "success")
-            return redirect(url_for("login"))
+            return redirect(url_for("dashboard"))
         except sqlite3.IntegrityError:
             return render_template("signup.html", error="Username already exists!")
         finally:
@@ -380,7 +382,7 @@ def mark_course_done(course_id):
     conn.close()
 
     flash("Course completed!", "success")
-    return redirect(url_for("course_detail", course_id=course_id))
+    return redirect(url_for("my_courses"))
 
 
 
@@ -646,6 +648,62 @@ def get_user_progress(user_id):
     progress = (completed / total * 100) if total > 0 else 0
     return round(progress, 2)
 
+@app.route("/delete_course/<int:course_id>", methods=["POST"])
+def delete_course(course_id):
+    if "user" not in session:
+        flash("Please log in to perform this action.", "error")
+        return redirect(url_for("login"))
+
+    user = session["user"]
+    if user["role"].lower() != "instructor":
+        flash("Only instructors can delete courses.", "error")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db()
+    c = conn.cursor()
+
+    # Ensure instructor only deletes their own course
+    c.execute("SELECT * FROM courses WHERE id = ? AND instructor = ?", (course_id, user["username"]))
+    course = c.fetchone()
+    if not course:
+        flash("Course not found or you do not have permission to delete it.", "error")
+        conn.close()
+        return redirect(url_for("dashboard"))
+
+    # --- Delete videos and their files ---
+    c.execute("SELECT filename FROM videos WHERE course_id = ?", (course_id,))
+    for (filename,) in c.fetchall():
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    c.execute("DELETE FROM videos WHERE course_id = ?", (course_id,))
+
+    # --- Delete assignments and their files ---
+    c.execute("SELECT filename FROM assignments WHERE course_id = ?", (course_id,))
+    for (filename,) in c.fetchall():
+        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    c.execute("DELETE FROM assignments WHERE course_id = ?", (course_id,))
+
+    # --- Delete enrollments & progress ---
+    c.execute("DELETE FROM user_courses WHERE course_id = ?", (course_id,))
+    c.execute("DELETE FROM course_progress WHERE course_id = ?", (course_id,))
+
+    # --- Delete course image ---
+    if course[5]:  # Assuming 'image' is the 6th column (index 5)
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], course[5])
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+    # --- Finally, delete the course itself ---
+    c.execute("DELETE FROM courses WHERE id = ?", (course_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash("Course deleted successfully.", "success")
+    return redirect(url_for("dashboard"))
 
 
 
