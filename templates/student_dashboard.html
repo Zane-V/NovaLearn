@@ -18,8 +18,8 @@
       {% if session.get('user') %}
         {% if session['user']['role'] == 'Instructor' %}
           <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
-          <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
-          <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+          <!-- <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+          <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li> -->
         {% endif %}
       </div>
         <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>

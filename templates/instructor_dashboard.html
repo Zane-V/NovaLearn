@@ -36,58 +36,6 @@
     text-decoration: none;
   }
 
-  /* Hamburger button */
-  .hamburger-button {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 2em;
-    cursor: pointer;
-    z-index: 1100;
-  }
-
-  /* Mobile menu (slides from right) */
-  .mobile-menu {
-    position: fixed;
-    top: 0;
-    right: -250px;
-    height: 100%;
-    width: 250px;
-    background: #0069d9;
-    padding: 20px;
-    transition: right 0.3s ease;
-    z-index: 2000;
-  }
-
-  .mobile-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .mobile-menu ul li a {
-    color: white;
-    text-decoration: none;
-    font-size: 18px;
-  }
-
-  .mobile-menu.show {
-    right: 0;
-  }
-
-  /* Responsive rules */
-  @media (max-width: 768px) {
-    .nav-links {
-      display: none;
-    }
-    .hamburger-button {
-      display: block;
-    }
-  }
 </style>
 
 <!-- NAVBAR -->
@@ -96,9 +44,9 @@
   <ul class="nav-links">
     {% if session.get('user') %}
       {% if session['user']['role'] == 'Instructor' %}
-        <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
-        <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
-        <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
+        <li><a href="{{ url_for('create_course') }}">Create </a></li>
+       <!-- <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
+        <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li> -->
       {% endif %}
       <li><a href="{{ url_for('profile') }}">Profile</a></li>
       <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -107,26 +55,7 @@
       <li><a href="{{ url_for('signup') }}">Signup</a></li>
     {% endif %}
   </ul>
-  <button class="hamburger-button" onclick="toggleMenu()">&#9776;</button>
 </nav>
-
-<!-- MOBILE MENU -->
-<div class="mobile-menu" id="mobileMenu">
-  <ul>
-    {% if session.get('user') %}
-      {% if session['user']['role'] == 'Instructor' %}
-        <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
-        <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
-        <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
-      {% endif %}
-      <li><a href="{{ url_for('profile') }}">Profile</a></li>
-      <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    {% else %}
-      <li><a href="{{ url_for('login') }}">Login</a></li>
-      <li><a href="{{ url_for('signup') }}">Signup</a></li>
-    {% endif %}
-  </ul>
-</div>
 
 <!-- MAIN CONTENT -->
 <div style="position: relative; width: 100%; padding-top: 80px;">
@@ -169,9 +98,4 @@
   </aside>
 </div>
 
-<script>
-  function toggleMenu() {
-    document.getElementById("mobileMenu").classList.toggle("show");
-  }
-</script>
 {% endblock %}

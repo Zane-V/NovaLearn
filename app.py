@@ -10,9 +10,8 @@ from flask import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-# ----------------------------
 # App & Upload Config
-# ----------------------------
+
 app = Flask(__name__)
 app.secret_key = "supersecret"
 

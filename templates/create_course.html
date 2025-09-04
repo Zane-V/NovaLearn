@@ -17,9 +17,9 @@
 <ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
   {% if session.get('user') %}
     {% if session['user']['role'] == 'Instructor' %}
-      <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
-      <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
-      <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
+      <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create </a></li>
+     <!-- <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
+      <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li> -->
     {% endif %}
     <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
     <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
@@ -34,11 +34,11 @@
 <form method="POST" enctype="multipart/form-data">
   <input type="text" name="title" placeholder="Course Title" required><br><br>
   
-  <textarea name="description" placeholder="Short Description"></textarea><br><br>
+  <textarea name="description" placeholder="Short Description" required></textarea><br><br>
   
-  <textarea name="content" placeholder="Write full course content here..." rows="8" cols="50"></textarea><br><br>
+  <textarea name="content" placeholder="Write full course content here..." rows="8" cols="50" required></textarea><br><br>
   
-  <input type="file" name="image" accept="image/*"><br><br>
+  <input type="file" name="image" accept="image/*" required><br><br>
   <button type="submit">Create</button>
 </form>
 
