@@ -1,0 +1,22 @@
+<nav class="navbar">
+  <a class="brand" href="{{ url_for('main') }}">
+    <img src="{{ url_for('static', filename='academic.png') }}" alt="" class="brand-icon">
+    NovaLearn
+  </a>
+  <ul class="nav-links">
+  {% if session.get('user') %}
+    {% if session['user']['role'] == 'Instructor' %}
+      <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
+      <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
+      <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
+    {% else %}
+      <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    <li><a class="nav-cta" href="{{ url_for('logout') }}">Logout</a></li>
+  {% else %}
+    <li><a href="{{ url_for('login') }}">Login</a></li>
+    <li><a class="nav-cta" href="{{ url_for('signup') }}">Signup</a></li>
+  {% endif %}
+  </ul>
+</nav>

@@ -1,16 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Sign Up</h2>
-<form method="POST">
-  <input type="text" name="username" placeholder="Username" required>
-  <input type="password" name="password" placeholder="Password" required>
-  <select name="role" required>
-    <option value="">Select Role</option>
-    <option value="Student">Student</option>
-    <option value="Instructor">Instructor</option>
-  </select>
-  <button type="submit">Signup</button>
-</form>
-<p>Already have an account? <a href="{{ url_for('login') }}" style="text-decoration: none; color: dodgerblue;">Login</a></p>
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<div class="auth-card">
+  <h2>Sign Up</h2>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" placeholder="Letters, numbers, underscores" required autofocus>
+    <label for="password">Password</label>
+    <input type="password" id="passwordInput" name="password" placeholder="8–16 chars, upper + lower + number" required oninput="updateStrength(this.value)">
+    <div class="meter-wrap">
+      <div class="meter"><div class="meter-bar" id="strengthBar"></div></div>
+      <div class="meter-label" id="strengthLabel">Password strength</div>
+    </div>
+    <label for="role">Account type</label>
+    <select id="role" name="role" required>
+      <option value="" selected disabled>Select Role</option>
+      <option value="Student">Student</option>
+      <option value="Instructor">Instructor</option>
+    </select>
+    <button type="submit">Signup</button>
+  </form>
+  <p class="alt-link">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+</div>
+
+<script>
+function updateStrength(value) {
+  let score = 0;
+  if (value.length >= 8) score++;
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+  if (/[0-9]/.test(value)) score++;
+  if (/[^A-Za-z0-9]/.test(value)) score++;
+
+  const bar = document.getElementById('strengthBar');
+  const label = document.getElementById('strengthLabel');
+  const levels = [
+    { w: '0%',   c: '#e04f4f', t: 'Password strength' },
+    { w: '25%',  c: '#e04f4f', t: 'Weak' },
+    { w: '50%',  c: '#e6a23c', t: 'Okay' },
+    { w: '75%',  c: '#67c23a', t: 'Good' },
+    { w: '100%', c: '#237a33', t: 'Strong' }
+  ];
+  const lv = levels[score];
+  bar.style.width = lv.w;
+  bar.style.background = lv.c;
+  label.textContent = lv.t;
+}
+</script>
 {% endblock %}

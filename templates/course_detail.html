@@ -1,54 +1,82 @@
 {% extends "base.html" %}
 {% block content %}
-<nav class="navbar" style="
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-background: dodgerblue;
-color: white;
-padding: 15px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-z-index: 1000;
-">
-<h1 style="margin:0;"><a href="{{url_for('dashboard')}}" style="color:white; text-decoration:none;">NovaLearn</a></h1>
-<ul style="list-style:none; margin:0; padding:0; display:flex; gap:20px;">
-{% if session.get('user') %}
-  {% if session['user']['role'] == 'Instructor' %}
-    <li><a href="{{ url_for('create_course') }}" style="color:white; text-decoration:none;">Create Course</a></li>
-    <li><a href="{{ url_for('upload_video') }}" style="color:white; text-decoration:none;">Upload Video</a></li>
-    <li><a href="{{ url_for('upload_assignment') }}" style="color:white; text-decoration:none;">Upload Assignment</a></li>
-  {% else %}
-    <li><a href="{{ url_for('my_courses') }}" style="color:white; text-decoration:none;">My Courses</a></li>
-  {% endif %}
-  <li><a href="{{ url_for('profile') }}" style="color:white; text-decoration:none;">Profile</a></li>
-  <li><a href="{{ url_for('logout') }}" style="color:white; text-decoration:none;">Logout</a></li>
-{% else %}
-  <li><a href="{{ url_for('login') }}" style="color:white; text-decoration:none;">Login</a></li>
-  <li><a href="{{ url_for('signup') }}" style="color:white; text-decoration:none;">Signup</a></li>
-{% endif %}
-</ul>
-</nav>
 
-<article class="course-detail" style="margin-top:80px; padding:20px;">
+<article class="course-detail">
   <header>
-    <h2>{{ course[1] }}</h2>
-    <p><strong>Short Description:</strong> {{ course[2] }}</p>
-  
-    {% if course[4] %}
-      <img src="{{ url_for('uploaded_file', filename=course[4]) }}" 
+    <h2>{{ course['title'] }}</h2>
+
+    <p>
+      <span class="badge badge-category">{{ course['category'] }}</span>
+      <span class="badge badge-level level-{{ course['level']|lower }}">{{ course['level']|capitalize }}</span>
+    </p>
+
+    <p><strong>Short Description:</strong> {{ course['description'] }}</p>
+
+    {% if course['image'] %}
+      <img src="{{ url_for('uploaded_file', filename=course['image']) }}"
            alt="Course Image" width="300" style="border-radius:8px; margin:15px 0;">
     {% endif %}
-  
+
     <section style="margin-top:20px; width: inherit;">
       <h3>Full Content</h3>
-      <p>{{ course[5] }}</p>
+      <p>{{ course['content'] }}</p>
     </section>
-  
-    <small><em>Instructor: {{ course[3] }}</em></small>
+
+    <small><em>Instructor: {{ course['instructor'] }}</em></small>
   </header>
+
+  {% if is_instructor or is_enrolled %}
+  <section>
+    <h3>Topic Updates</h3>
+
+    {% if posts %}
+      {% for p in posts %}
+        <div class="post-card" id="post-{{ p['id'] }}">
+          <h4>{{ p['title'] }}</h4>
+          <div class="post-meta">Posted by {{ p['author'] }} &middot; {{ p['created_at'] }}</div>
+          <p style="white-space: pre-line;">{{ p['body'] }}</p>
+
+          {% if is_instructor %}
+          <div class="post-actions">
+            <button type="button" class="btn-mini btn-edit"
+                    onclick="toggleEdit({{ p['id'] }})">Edit</button>
+            <form action="{{ url_for('delete_post', post_id=p['id']) }}" method="post" style="display:inline;"
+                  onsubmit="return confirm('Delete this update?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-mini btn-del">Delete</button>
+            </form>
+          </div>
+
+          <form id="edit-form-{{ p['id'] }}" class="post-form" style="display:none; margin-top:10px;"
+                action="{{ url_for('edit_post', post_id=p['id']) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="title" value="{{ p['title'] }}" required>
+            <textarea name="body" rows="3" required>{{ p['body'] }}</textarea>
+            <button type="submit" class="btn-mini btn-edit">Save changes</button>
+          </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No updates yet.</p>
+    {% endif %}
+
+    {% if is_instructor %}
+    <form class="post-form" action="{{ url_for('create_post', course_id=course['id']) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h4 style="margin:0 0 8px;">Post a new update</h4>
+      <input type="text" name="title" placeholder="Update title (e.g. Week 3 notes added)" required>
+      <textarea name="body" rows="3" placeholder="Write the update for your enrolled students..." required></textarea>
+      <button type="submit" style="padding:8px 16px; background:dodgerblue; color:white; border:none; border-radius:6px; cursor:pointer;">Post update</button>
+    </form>
+    {% endif %}
+  </section>
+  {% else %}
+  <section>
+    <h3>Topic Updates</h3>
+    <p><em>Enroll in this course to see updates from the instructor.</em></p>
+  </section>
+  {% endif %}
 
   <section>
     <h3>Course Videos</h3>
@@ -56,9 +84,9 @@ z-index: 1000;
       <ul class="media-list">
         {% for v in videos %}
           <li class="media-item">
-            <b>{{ v[2] }}</b><br>
-            <video width="300" controls>
-              <source src="{{ url_for('uploaded_file', filename=v[3]) }}" type="video/mp4">
+            <b>{{ v['title'] }}</b><br>
+            <video width="320" controls preload="metadata">
+              <source src="{{ url_for('uploaded_file', filename=v['filename']) }}" type="video/mp4">
               Your browser does not support the video tag.
             </video>
           </li>
@@ -75,8 +103,8 @@ z-index: 1000;
       <ul class="media-list">
         {% for a in assignments %}
           <li class="media-item">
-            <b>{{ a[2] }}</b> —
-            <a class="btn" href="{{ url_for('uploaded_file', filename=a[3]) }}" target="_blank">Download</a>
+            <b>{{ a['title'] }}</b> —
+            <a class="btn" href="{{ url_for('uploaded_file', filename=a['filename']) }}" target="_blank">Download</a>
           </li>
         {% endfor %}
       </ul>
@@ -90,6 +118,7 @@ z-index: 1000;
 {% if session.get('user') and session['user']['role'].lower() != 'instructor' %}
   {% if not is_completed %}
     <form action="{{ url_for('mark_course_done', course_id=course['id']) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" style="padding:10px 20px; background:dodgerblue; color:white; border:none; border-radius:5px; cursor:pointer;">
         Mark as Done
       </button>
@@ -102,8 +131,9 @@ z-index: 1000;
 {% endif %}
 
 
-{% if session.get('user') and session['user']['role'].lower() == 'instructor' %}
+{% if is_instructor %}
   <form action="{{ url_for('delete_course', course_id=course['id']) }}" method="post" style="margin-top: 20px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" style="padding:10px 20px; background:red; color:white; border:none; border-radius:5px; cursor:pointer;"
             onclick="return confirm('Are you sure you want to delete this course?');">
       Delete Course
@@ -111,5 +141,11 @@ z-index: 1000;
   </form>
 {% endif %}
 
+<script>
+function toggleEdit(id) {
+  const f = document.getElementById('edit-form-' + id);
+  if (f) f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+}
+</script>
 
 {% endblock %}

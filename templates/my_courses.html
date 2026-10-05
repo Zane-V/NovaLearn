@@ -2,43 +2,6 @@
 {% block content %}
 
 <style>
-  /* Navbar */
-  .navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: dodgerblue;
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1000;
-  }
-
-  .navbar h1 {
-    margin: 0;
-  }
-
-  .navbar a {
-    color: white;
-    text-decoration: none;
-  }
-
-  .navbar ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    gap: 20px;
-  }
-
-  body {
-    padding-top: 80px;
-    font-family: Arial, sans-serif;
-  }
-
   /* Course cards */
   .cards {
     display: grid;
@@ -120,29 +83,6 @@
 
 </style>
 
-<nav class="navbar">
-  <h1>
-      <a href="{{ url_for('dashboard') }}">NovaLearn</a>
-  </h1>
-  <ul>
-    {% if session.get('user') %}
-      {% if session['user']['role'] == 'Instructor' %}
-        <li><a href="{{ url_for('create_course') }}">Create Course</a></li>
-        <li><a href="{{ url_for('upload_video') }}">Upload Video</a></li>
-        <li><a href="{{ url_for('upload_assignment') }}">Upload Assignment</a></li>
-      {% else %}
-        <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
-      {% endif %}
-      <li><a href="{{ url_for('profile') }}">Profile</a></li>
-      <li><a href="{{ url_for('logout') }}">Logout</a></li>
-    {% else %}
-      <li><a href="{{ url_for('login') }}">Login</a></li>
-      <li><a href="{{ url_for('signup') }}">Signup</a></li>
-    {% endif %}
-  </ul>
-</nav>
-
-
 <h2>My Courses</h2>
 
 {% if session.get('user') and session['user']['role'] != 'Instructor' %}
@@ -151,6 +91,10 @@
         <a href="{{ url_for('course_detail', course_id=course['id']) }}" class="card-link">
           <div class="card">
             <h4>{{ course['title'] }}</h4>
+            <p>
+              <span class="badge badge-category">{{ course['category'] or 'Other' }}</span>
+              <span class="badge badge-level level-{{ (course['level'] or 'beginner')|lower }}">{{ ((course['level'] or 'Beginner'))|capitalize }}</span>
+            </p>
             <p>{{ course['description'] }}</p>
             <small>Instructor: {{ course['instructor'] }}</small>
             {% if course['image'] %}

@@ -7,74 +7,70 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="shortcut icon" href="{{url_for('static', filename='academic.png')}}" type="image/x-icon">
 </head>
-<body style="background-image: url('/static/probg.jpg'); background-size: cover; position: relative; z-index: 0; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh;">
-  <style>
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('/static/probg.jpg');
-      background-size: cover;
-      background-position: center;
-      filter: blur(8px);
-      z-index: -1;
-    }
-  </style>
+<body>
+  {% include "_navbar.html" %}
 
-  <main class="container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; width: 100%;">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for category, message in messages %}
-            <div class="flash {{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="toast-stack" aria-live="polite">
+        {% for category, message in messages %}
+          <div class="toast toast-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="page">
     {% block content %}{% endblock %}
   </main>
 
   <script>
+    // Auto-dismiss toast notifications after 4 seconds
+    setTimeout(() => {
+      document.querySelectorAll('.toast').forEach(t => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(-8px)';
+        setTimeout(() => t.remove(), 300);
+      });
+    }, 4000);
+
     const searchBox = document.getElementById('searchBox');
     const resultsList = document.getElementById('searchResults');
-    
+
     if (searchBox && resultsList) {
         let timeout = null;
-    
+
         searchBox.addEventListener('input', () => {
             clearTimeout(timeout);
             const query = searchBox.value.trim();
-    
+
             timeout = setTimeout(async () => {
                 if (!query) {
                     resultsList.style.display = 'none';
                     resultsList.innerHTML = '';
                     return;
                 }
-    
+
                 const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
                 const results = await res.json();
-    
+
                 if (results.length === 0) {
                     resultsList.style.display = 'none';
                     resultsList.innerHTML = '';
                     return;
                 }
-    
+
                 resultsList.innerHTML = results.map(item => {
                     let link = item.type === 'course' ? `/course/${item.id}` : `/instructor/${item.id}`;
                     return `<li style="padding:5px; cursor:pointer;" onclick="window.location='${link}'">
                                 ${item.name} (${item.type})
                             </li>`;
                 }).join('');
-    
+
                 resultsList.style.display = 'block';
             }, 250); // debounce 250ms
         });
-    
+
         // Hide dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!searchBox.contains(e.target) && !resultsList.contains(e.target)) {
@@ -83,7 +79,6 @@
         });
     }
     </script>
-    
 
 </body>
 </html>
